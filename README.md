@@ -1,29 +1,70 @@
 # Alan
 
-TODO: Write a gem description
+Alan is a simple DSL for creating and running different automations. Currently a finite state machine and a deterministic pushdown automata is available. A program in the fsm or the dpa language is also a ruby program and can be run from the command-line, supply the word to process as a command-line argument.
 
 ## Installation
-
-Add this line to your application's Gemfile:
-
-    gem 'alan'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
 
     $ gem install alan
 
 ## Usage
 
-TODO: Write usage instructions here
+### Example 1: A fsm
 
-## Contributing
+    require 'alan'
+    
+    # Accept a*ba+
+    Alan::FSM.define do
+      start :s
+      
+      state :s do |x|
+        if x == 'a'
+          goto :s
+        elsif x == 'b'
+          goto :p
+        end
+      end
+      
+      state :p do |x|
+        if x == 'a'
+          goto :q
+        end
+      end
+      
+      state :q do |x|
+        if x == 'a'
+          goto :q
+        elsif x == nil
+          accept
+        end
+      end
+    end
 
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+### Example 2: A dpa
+
+    require 'alan'
+    
+    # Accept 0^n 1^n
+    Alan::DPA.define do
+      start :s
+      
+      state :s do |x|
+        if x == '0'
+          push 'Z'
+          goto :s
+        elsif x == '1'
+          y = pop
+          if y == 'Z'
+            goto :q
+          end
+        end
+      end
+      
+      state :q do |x|
+        y = pop
+        if x == '1' && y == 'Z'
+          goto :q
+        elsif x == nil && y == nil
+          accept
+        end
+      end
+    end
