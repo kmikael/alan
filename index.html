@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Alan by kmikael</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Alan</h1>
+        <p>A DSL for creating and running different automations.</p>
+
+        <p class="view"><a href="https://github.com/kmikael/alan">View the Project on GitHub <small>kmikael/alan</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/kmikael/alan/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/kmikael/alan/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/kmikael/alan">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="alan" class="anchor" href="#alan"><span class="octicon octicon-link"></span></a>Alan</h1>
+
+<p>Alan is a simple DSL for creating and running different automations. Currently a finite state machine and a deterministic pushdown automata is available. A program in the fsm or the dpa language is also a ruby program and can be run from the command-line, supply the word to process as a command-line argument.</p>
+
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<pre><code>$ gem install alan
+</code></pre>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<h3>
+<a name="example-1-a-fsm" class="anchor" href="#example-1-a-fsm"><span class="octicon octicon-link"></span></a>Example 1: A fsm</h3>
+
+<div class="highlight"><pre><span class="c1"># example1.rb</span>
+<span class="nb">require</span> <span class="s1">'alan'</span>
+
+<span class="c1"># Accept a*ba+</span>
+<span class="ss">Alan</span><span class="p">:</span><span class="ss">:FSM</span><span class="o">.</span><span class="n">define</span> <span class="k">do</span>
+  <span class="n">start</span> <span class="ss">:s</span>
+
+  <span class="n">state</span> <span class="ss">:s</span> <span class="k">do</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">'a'</span>
+      <span class="n">goto</span> <span class="ss">:s</span>
+    <span class="k">elsif</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">'b'</span>
+      <span class="n">goto</span> <span class="ss">:p</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="n">state</span> <span class="ss">:p</span> <span class="k">do</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">'a'</span>
+      <span class="n">goto</span> <span class="ss">:q</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="n">state</span> <span class="ss">:q</span> <span class="k">do</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">'a'</span>
+      <span class="n">goto</span> <span class="ss">:q</span>
+    <span class="k">elsif</span> <span class="n">x</span> <span class="o">==</span> <span class="kp">nil</span>
+      <span class="n">accept</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+
+<p>Example run: <code>ruby example1.rb aaaaba</code></p>
+
+<h3>
+<a name="example-2-a-dpa" class="anchor" href="#example-2-a-dpa"><span class="octicon octicon-link"></span></a>Example 2: A dpa</h3>
+
+<div class="highlight"><pre><span class="c1"># example2.rb</span>
+<span class="nb">require</span> <span class="s1">'alan'</span>
+
+<span class="c1"># Accept 0^n 1^n</span>
+<span class="ss">Alan</span><span class="p">:</span><span class="ss">:DPA</span><span class="o">.</span><span class="n">define</span> <span class="k">do</span>
+  <span class="n">start</span> <span class="ss">:s</span>
+
+  <span class="n">state</span> <span class="ss">:s</span> <span class="k">do</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">'0'</span>
+      <span class="n">push</span> <span class="s1">'Z'</span>
+      <span class="n">goto</span> <span class="ss">:s</span>
+    <span class="k">elsif</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">'1'</span>
+      <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span>
+      <span class="k">if</span> <span class="n">y</span> <span class="o">==</span> <span class="s1">'Z'</span>
+        <span class="n">goto</span> <span class="ss">:q</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="n">state</span> <span class="ss">:q</span> <span class="k">do</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">'1'</span> <span class="o">&amp;&amp;</span> <span class="n">y</span> <span class="o">==</span> <span class="s1">'Z'</span>
+      <span class="n">goto</span> <span class="ss">:q</span>
+    <span class="k">elsif</span> <span class="n">x</span> <span class="o">==</span> <span class="kp">nil</span> <span class="o">&amp;&amp;</span> <span class="n">y</span> <span class="o">==</span> <span class="kp">nil</span>
+      <span class="n">accept</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+
+<p>Example run: <code>ruby example2.rb 00001111</code></p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/kmikael">kmikael</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
